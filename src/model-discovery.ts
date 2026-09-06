@@ -10,7 +10,7 @@ import { getCursorModelSelectionIdentities } from "../shared/cursor-model-select
 import { loadContextWindowCache } from "./context-window-cache.js";
 import { loadCursorSdk } from "./cursor-sdk-runtime.js";
 import { resolveCursorApiKey, resolveCursorRuntimeApiKey } from "./cursor-api-key.js";
-import { scrubSensitiveText } from "./cursor-sensitive-text.js";
+import { sanitizeCursorProviderError } from "./cursor-provider-errors.js";
 import {
 	fingerprintApiKey,
 	loadAnyCachedModelCatalog,
@@ -357,11 +357,6 @@ export function buildCursorModelSelection(
 	return params.length > 0 ? { id: metadata.selectionModelId, params } : { id: metadata.selectionModelId };
 }
 
-function sanitizeDiscoveryError(error: unknown, apiKey: string): string | undefined {
-	const message = error instanceof Error ? error.message : typeof error === "string" ? error : "";
-	return scrubSensitiveText(message, apiKey).trim() || undefined;
-}
-
 async function useFallbackModels(options: DiscoverModelsOptions, issue: CursorModelFallbackIssue): Promise<ProviderModelConfig[]> {
 	options.onFallback?.(issue);
 	const { FALLBACK_MODEL_ITEMS } = await import("./cursor-fallback-models.generated.js");
@@ -398,7 +393,7 @@ export async function discoverModels(options: DiscoverModelsOptions = {}): Promi
 			message: `Cursor model discovery returned no models. Using fallback Cursor models; verify ${AUTH_SETUP_HINT}. ${CATALOG_REFRESH_HINT}`,
 		});
 	} catch (error) {
-		const errorMessage = sanitizeDiscoveryError(error, apiKey);
+		const errorMessage = sanitizeCursorProviderError(error, apiKey);
 		// Prefer a previously cached catalog over the generic bundled fallback when
 		// a live refresh fails (e.g. transient network/auth errors), but keep the
 		// provenance visible so refresh commands do not claim a live refresh worked.
@@ -413,7 +408,7 @@ export async function discoverModels(options: DiscoverModelsOptions = {}): Promi
 		}
 		return useFallbackModels(options, {
 			reason: "discovery-failed",
-			message: `Cursor model discovery failed${errorMessage ? `: ${errorMessage}` : ""}. Using fallback Cursor models; verify ${AUTH_SETUP_HINT}. ${CATALOG_REFRESH_HINT}`,
+			message: `Cursor model discovery failed: ${errorMessage} Using fallback Cursor models; run /cursor-refresh-models to retry discovery.`,
 			...(errorMessage ? { errorMessage } : {}),
 		});
 	}

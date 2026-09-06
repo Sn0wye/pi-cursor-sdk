@@ -156,7 +156,7 @@ describe("discoverModels model-list cache", () => {
 		expect(issues[0].errorMessage).toContain("network down");
 	});
 
-	it("omits an empty cached-catalog error detail", async () => {
+	it("reports absent cached-catalog error details without blaming credentials", async () => {
 		writeStoredCursorApiKey("cache-key");
 		mockedList.mockResolvedValueOnce([MODEL]);
 		await discoverModels();
@@ -167,7 +167,8 @@ describe("discoverModels model-list cache", () => {
 
 		expect(issues).toHaveLength(1);
 		expect(issues[0].reason).toBe("cached-after-error");
-		expect(issues[0]).not.toHaveProperty("errorMessage");
+		expect(issues[0].errorMessage).toBe("Cursor SDK request failed without further error details.");
+		expect(issues[0].message).not.toMatch(/API key|\/login/);
 		expect(issues[0].message).not.toContain("undefined");
 	});
 });
