@@ -12,6 +12,7 @@
 - Preserve bounded, scrubbed structured error details and causes in provider/discovery failures. Stop blaming API keys for module-loading failures or ambiguous session-authentication errors; retain explicit bad-key guidance (#228, #233, #247). This does not fix the reported compiled Bun/embedded-host loading failures or establish hour-idle session recovery.
 - Keep bridge tool-call IDs within provider limits while preserving unique IDs and matching results (#237; thanks @gwatkins-arista).
 - Keep skill activation callable with its catalog and descriptions intact while the system prompt stays stable (#244).
+- Map SDK `reasoning_effort` controls to pi thinking levels so Gemini 3.8 Flash honors low, medium, and high without changing its SDK default.
 
 ### Changed
 

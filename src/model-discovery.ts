@@ -65,6 +65,7 @@ export interface CursorModelMetadata {
 		reasoning: boolean;
 		effort: boolean;
 		thinking: boolean;
+		reasoning_effort: boolean;
 		fast: boolean;
 	};
 }
@@ -114,7 +115,7 @@ function getThinkingLevelMap(item: ModelListItem): ThinkingLevelMap | undefined 
 	const reasoningParameter = getParameter(item, "reasoning");
 	const effortParameter = getParameter(item, "effort");
 	const thinkingParameter = getParameter(item, "thinking");
-	const valueParameter = effortParameter ?? reasoningParameter ?? thinkingParameter;
+	const valueParameter = effortParameter ?? reasoningParameter ?? thinkingParameter ?? getParameter(item, "reasoning_effort");
 	if (!valueParameter) return undefined;
 
 	if (valueParameter.id === "thinking" && hasBooleanValues(valueParameter)) {
@@ -235,6 +236,7 @@ function toMetadata(
 			reasoning: getParameter(item, "reasoning") !== undefined,
 			effort: getParameter(item, "effort") !== undefined,
 			thinking: getParameter(item, "thinking") !== undefined,
+			reasoning_effort: getParameter(item, "reasoning_effort") !== undefined,
 			fast: getParameter(item, "fast") !== undefined,
 		},
 	};
@@ -336,6 +338,8 @@ function applyThinkingLevel(
 
 	if (metadata.parameterIds.thinking) {
 		setParam(params, "thinking", mapped);
+	} else if (metadata.parameterIds.reasoning_effort) {
+		setParam(params, "reasoning_effort", mapped);
 	}
 }
 
@@ -401,15 +405,15 @@ export async function discoverModels(options: DiscoverModelsOptions = {}): Promi
 		if (cachedCatalog && cachedCatalog.models.length > 0) {
 			options.onFallback?.({
 				reason: "cached-after-error",
-				message: `Cursor model discovery failed; using cached Cursor model catalog from ${new Date(cachedCatalog.fetchedAt).toISOString()}.${errorMessage ? ` ${errorMessage}` : ""}`,
-				...(errorMessage ? { errorMessage } : {}),
+				message: `Cursor model discovery failed; using cached Cursor model catalog from ${new Date(cachedCatalog.fetchedAt).toISOString()}. ${errorMessage}`,
+				errorMessage,
 			});
 			return registerModelItems(cachedCatalog.models);
 		}
 		return useFallbackModels(options, {
 			reason: "discovery-failed",
 			message: `Cursor model discovery failed: ${errorMessage} Using fallback Cursor models; run /cursor-refresh-models to retry discovery.`,
-			...(errorMessage ? { errorMessage } : {}),
+			errorMessage,
 		});
 	}
 }

@@ -82,6 +82,7 @@ describe("discoverModels model-list cache", () => {
 			reasoning: false,
 			effort: true,
 			thinking: true,
+			reasoning_effort: false,
 			fast: false,
 		});
 		expect(buildCursorModelSelection("claude-opus-4-8", "low")).toEqual({
